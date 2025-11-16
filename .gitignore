@@ -1,4 +1,7 @@
-# 加密工具不应该上传到公开仓库
+# 原始内容文件（未加密）- 不应上传
+content.html
+
+# 旧的加密工具
 encrypt-tool.html
 
 # macOS
@@ -10,3 +13,6 @@ encrypt-tool.html
 *.swp
 *.swo
 *~
+
+# Node modules (if using local staticrypt)
+node_modules/
