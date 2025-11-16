@@ -1,0 +1,12 @@
+# 加密工具不应该上传到公开仓库
+encrypt-tool.html
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
