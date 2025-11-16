@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>安全访问</title>
+    <title>密码保护</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         * {
@@ -91,58 +91,6 @@
             transform: translateY(0);
         }
 
-        .error {
-            color: #e74c3c;
-            text-align: center;
-            margin-top: 15px;
-            font-size: 14px;
-            display: none;
-        }
-
-        .error.show {
-            display: block;
-        }
-
-        #content {
-            display: none;
-        }
-
-        #content.show {
-            display: block;
-            animation: fadeIn 0.5s;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .content-wrapper {
-            padding: 20px;
-        }
-
-        .content-wrapper h2 {
-            color: #667eea;
-            margin-bottom: 20px;
-        }
-
-        .content-wrapper p {
-            line-height: 1.8;
-            color: #555;
-            margin-bottom: 15px;
-        }
-
-        .logout-btn {
-            margin-top: 30px;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-
         .shake {
             animation: shake 0.5s;
         }
@@ -152,98 +100,72 @@
             25% { transform: translateX(-10px); }
             75% { transform: translateX(10px); }
         }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #667eea;
+            margin-top: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div id="login-section">
-            <div class="lock-icon">🔒</div>
-            <h1>内容已加密</h1>
-            <p class="subtitle">请输入密码以查看内容</p>
-            <div class="input-group">
-                <input type="password" id="password" placeholder="请输入密码" autocomplete="off">
-            </div>
-            <button onclick="checkPassword()">解锁</button>
-            <div class="error" id="error">密码错误，请重试</div>
+        <div class="lock-icon">🔒</div>
+        <h1>受保护的内容</h1>
+        <p class="subtitle">请输入密码以继续</p>
+        <div class="input-group">
+            <input type="password" id="password" placeholder="请输入密码" autocomplete="off">
         </div>
-
-        <div id="content">
-            <div class="content-wrapper" id="decrypted-content">
-                <!-- 解密后的内容将显示在这里 -->
-            </div>
-            <button class="logout-btn" onclick="logout()">退出</button>
-        </div>
+        <button onclick="checkPassword()">继续</button>
+        <div class="loading" id="loading">正在验证...</div>
     </div>
 
     <script>
-        // 加密的内容 - 这是用密码 "demo123" 加密的示例内容
-        // 实际使用时，你需要用自己的内容和密码替换这个
-        const encryptedContent = "U2FsdGVkX1+8xqKVvHCK9jYvBQxZE/r0h7zGDFmcGgVwcnF6gXzQ6YqPZRp7JoN3wHJ5j7MzKxE4P1VnUbJvMzQU6vHxWFqJZE8rK5YNqhE6F/W8X1zXqJ4rKQN5VnF8fPqJ6Y7E3rXzQJ5MzQN4HE8r1Y5fPqZ7JoN3wE6F/r0h7X1+8xqKVvHCK9jYvBQxZE/r0h7zGDFmcGgVwcnF6gXzQ6YqPZRp7JoN3wHJ5j7MzKxE4P1VnUbJvM=";
+        // 检查是否已经有 hash（从密码页面跳转过来的）
+        if (window.location.hash) {
+            const hash = window.location.hash.substring(1);
+            // 尝试重定向到对应的文件夹
+            window.location.href = hash + '/';
+        }
 
-        // 密码验证和解密函数
+        // 密码验证函数
         function checkPassword() {
             const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('error');
+            const passwordInput = document.getElementById('password');
+            const loading = document.getElementById('loading');
 
             if (!password) {
-                errorDiv.textContent = '请输入密码';
-                errorDiv.classList.add('show');
+                passwordInput.classList.add('shake');
+                setTimeout(() => {
+                    passwordInput.classList.remove('shake');
+                }, 500);
                 return;
             }
 
-            try {
-                // 尝试解密
-                const decrypted = CryptoJS.AES.decrypt(encryptedContent, password);
-                const decryptedText = decrypted.toString(CryptoJS.enc.Utf8);
+            // 显示加载状态
+            loading.classList.add('show');
 
-                if (decryptedText) {
-                    // 解密成功
-                    document.getElementById('decrypted-content').innerHTML = decryptedText;
-                    document.getElementById('login-section').style.display = 'none';
-                    document.getElementById('content').classList.add('show');
-                    errorDiv.classList.remove('show');
-                } else {
-                    // 解密失败
-                    showError();
-                }
-            } catch (e) {
-                // 解密出错
-                showError();
-            }
-        }
+            // 使用 SHA256 hash 密码
+            const hash = CryptoJS.SHA256(password).toString();
 
-        function showError() {
-            const errorDiv = document.getElementById('error');
-            const passwordInput = document.getElementById('password');
+            // 设置 hash 到 URL
+            window.location.hash = hash;
 
-            errorDiv.textContent = '密码错误，请重试';
-            errorDiv.classList.add('show');
-            passwordInput.classList.add('shake');
-            passwordInput.value = '';
-
+            // 尝试跳转到对应文件夹
             setTimeout(() => {
-                passwordInput.classList.remove('shake');
+                window.location.href = hash + '/';
             }, 500);
-        }
-
-        function logout() {
-            document.getElementById('login-section').style.display = 'block';
-            document.getElementById('content').classList.remove('show');
-            document.getElementById('password').value = '';
         }
 
         // 回车键提交
         document.getElementById('password').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 checkPassword();
-            }
-        });
-
-        // 防止右键和F12（基础防护，技术用户仍可绕过）
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('keydown', e => {
-            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
-                e.preventDefault();
             }
         });
     </script>
